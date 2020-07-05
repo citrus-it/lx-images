@@ -1,7 +1,7 @@
 name: Build LX Images
 on:
     push:
-        paths-ignore: 
+        paths-ignore:
             - '**.md'
         branches:
             - master
@@ -27,15 +27,48 @@ jobs:
                   release_name: Release ${{ steps.build_tag.outputs.tag }}
                   draft: false
                   prerelease: false
-    ubuntu:
-        needs: prepare
-        strategy:
-            matrix:
-                RELEASE:
-                    - 20.04
-                    - 18.04
+#    ubuntu:
+#        needs: prepare
+#        strategy:
+#            matrix:
+#                RELEASE:
+#                    - 20.04
+#                    - 18.04
+#
+#        name: Build Ubuntu ${{ matrix.RELEASE }}
+#        runs-on: ubuntu-latest
+#        steps:
+#            - name: Checkout
+#              uses: actions/checkout@v2
+#
+#            - name: Build Image
+#              id: build_image
+#              run: |
+#                  set -xe
+#                  cd ubuntu
+#                  tar=lx-ubuntu-${{ matrix.RELEASE }}.tar
+#                  tag=release:$$
+#                  docker build --tag $tag --build-arg UBUNTU_RELEASE=${{ matrix.RELEASE }} .
+#                  container=$(docker create $tag)
+#                  docker  cp $container:. - > $tar
+#                  docker rm $container
+#                  docker rmi $tag
+#                  xz $tar
+#            - name: Upload Release Asset
+#              id: upload_release_asset
+#              uses: actions/upload-release-asset@v1
+#              env:
+#                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#              with:
+#                  upload_url: ${{ needs.prepare.outputs.upload_url }}
+#                  asset_path: ./ubuntu/lx-ubuntu-${{ matrix.RELEASE }}.tar.xz
+#                  asset_name: lx-ubuntu-${{ matrix.RELEASE }}-${{ needs.prepare.outputs.tag }}.tar.xz
+#                  asset_content_type: application/x-tar
 
-        name: Build Ubuntu ${{ matrix.RELEASE }}
+    void:
+        needs: prepare
+
+        name: Build void image
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -44,13 +77,12 @@ jobs:
             - name: Build Image
               id: build_image
               run: |
-                  set -xe
-                  cd ubuntu
-                  tar=lx-ubuntu-${{ matrix.RELEASE }}.tar
+                  cd void
+                  tar=lx-void.tar
                   tag=release:$$
-                  docker build --tag $tag --build-arg UBUNTU_RELEASE=${{ matrix.RELEASE }} .
+                  docker build --tag $tag
                   container=$(docker create $tag)
-                  docker  cp $container:. - > $tar
+                  docker cp $container:. - > $tar
                   docker rm $container
                   docker rmi $tag
                   xz $tar
@@ -61,6 +93,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   upload_url: ${{ needs.prepare.outputs.upload_url }}
-                  asset_path: ./ubuntu/lx-ubuntu-${{ matrix.RELEASE }}.tar.xz
-                  asset_name: lx-ubuntu-${{ matrix.RELEASE }}-${{ needs.prepare.outputs.tag }}.tar.xz
+                  asset_path: ./ubuntu/lx-void.tar.xz
+                  asset_name: lx-void-${{ matrix.RELEASE }}-${{ needs.prepare.outputs.tag }}.tar.xz
                   asset_content_type: application/x-tar
+
